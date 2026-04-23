@@ -5,6 +5,7 @@ from routes.chat_routes import chat_bp
 app = Flask(__name__)
 CORS(app)
 
+
 # Register routes
 app.register_blueprint(chat_bp)
 
