@@ -9,4 +9,5 @@ CORS(app)
 app.register_blueprint(chat_bp)
 
 if __name__ == "__main__":
+    print("Starting Flask server...")
     app.run(debug=True)
