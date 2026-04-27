@@ -1,22 +1,36 @@
 def generate_hint(error_info, hint_level):
     error_type = error_info.get("type")
-    message = error_info.get("message", "")
 
-    if error_type == "No Error":
-        return "Your code looks correct. Try testing different inputs."
+    # No error
+    if error_type == "none":
+        return "Your code ran successfully. Try testing edge cases or improving structure."
 
-    # LEVEL 1: General hint
-    if hint_level == 1:
-        return "There may be a syntax issue in your code. Check the structure carefully."
+    # SYNTAX ERRORS
+    if error_type == "SyntaxError":
+        if hint_level == 1:
+            return "Check your syntax carefully. Look for missing brackets, colons, or indentation."
+        elif hint_level == 2:
+            return "Focus on the line mentioned in the error. Something is not written in valid Python format."
+        else:
+            return f"The issue is likely near line {error_info.get('line')}. Review that line closely."
 
-    # LEVEL 2: Direction hint
-    elif hint_level == 2:
-        if error_type == "SyntaxError":
-            return f"Check line {error_info.get('line')} for a syntax issue."
-        return "Something is wrong in how your code is written."
+    # DIVISION BY ZERO
+    if error_type == "ZeroDivisionError":
+        if hint_level == 1:
+            return "Check any division operations in your code."
+        elif hint_level == 2:
+            return "A number is being divided by zero, which is not allowed."
+        else:
+            return "You are dividing by zero. Ensure the denominator is not zero."
 
-    # LEVEL 3: Specific hint
-    elif hint_level == 3:
-        return f"Python says: {message}"
+    # NAME ERROR
+    if error_type == "NameError":
+        if hint_level == 1:
+            return "Check variable names used in your code."
+        elif hint_level == 2:
+            return "You may be using a variable that hasn't been defined."
+        else:
+            return "A variable is being used before it is defined."
 
-    return "Try reviewing your code again."
+    # DEFAULT fallback
+    return f"An error occurred: {error_info.get('message')}"
