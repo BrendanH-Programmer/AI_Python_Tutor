@@ -21,7 +21,7 @@ def generate_hint(error_info, hint_level: int):
     elif hint_level == 2:
 
         # Convert error type into readable words
-        readable_error = error_type.replace("Error", "").replace("_", " ").strip()
+        readable_error = error_type.replace("Error", "").replace("_", " ").strip().lower()
 
         return f"This looks like a {readable_error.lower()} issue. Think about what might cause it."
 
