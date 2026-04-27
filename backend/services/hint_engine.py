@@ -1,36 +1,57 @@
 def generate_hint(error_info, hint_level):
     error_type = error_info.get("type")
+    message = error_info.get("message", "")
 
-    # No error
+    # NO ERROR
     if error_type == "none":
-        return "Your code ran successfully. Try testing edge cases or improving structure."
+        return "Your code ran successfully. Try adding more complexity or testing edge cases."
 
     # SYNTAX ERRORS
     if error_type == "SyntaxError":
-        if hint_level == 1:
-            return "Check your syntax carefully. Look for missing brackets, colons, or indentation."
-        elif hint_level == 2:
-            return "Focus on the line mentioned in the error. Something is not written in valid Python format."
-        else:
-            return f"The issue is likely near line {error_info.get('line')}. Review that line closely."
 
-    # DIVISION BY ZERO
+        if ":" in message:
+            return [
+                "Check if you are missing a colon ':' in statements like if, for, or def.",
+                "Python requires a colon at the end of control statements.",
+                "Add ':' at the end of your statement (e.g. if x == 5:)"
+            ][min(hint_level-1, 2)]
+
+        if "unexpected EOF" in message:
+            return [
+                "It looks like something is incomplete.",
+                "Check if all brackets or quotes are properly closed.",
+                "You are likely missing a closing bracket or quotation mark."
+            ][min(hint_level-1, 2)]
+
+        return [
+            "Check your syntax carefully.",
+            "Focus on the line mentioned in the error.",
+            f"Review line {error_info.get('line')} for syntax issues."
+        ][min(hint_level-1, 2)]
+
+    # ZERO DIVISION
     if error_type == "ZeroDivisionError":
-        if hint_level == 1:
-            return "Check any division operations in your code."
-        elif hint_level == 2:
-            return "A number is being divided by zero, which is not allowed."
-        else:
-            return "You are dividing by zero. Ensure the denominator is not zero."
+        return [
+            "Check your division operations.",
+            "You might be dividing a number by zero.",
+            "Division by zero is not allowed — ensure denominator is not 0."
+        ][min(hint_level-1, 2)]
 
     # NAME ERROR
     if error_type == "NameError":
-        if hint_level == 1:
-            return "Check variable names used in your code."
-        elif hint_level == 2:
-            return "You may be using a variable that hasn't been defined."
-        else:
-            return "A variable is being used before it is defined."
+        return [
+            "Check variable names.",
+            "A variable might not be defined.",
+            "Define the variable before using it."
+        ][min(hint_level-1, 2)]
 
-    # DEFAULT fallback
-    return f"An error occurred: {error_info.get('message')}"
+    # TYPE ERROR
+    if error_type == "TypeError":
+        return [
+            "Check the types of your variables.",
+            "You may be mixing incompatible types.",
+            "Ensure operations are between compatible data types."
+        ][min(hint_level-1, 2)]
+
+    # FALLBACK
+    return f"Error detected: {message}"
