@@ -1,30 +1,35 @@
 def generate_hint(error_info, hint_level: int):
-    """
-    Tiered hint system:
-    Level 1 = general hint
-    Level 2 = more specific
-    Level 3 = almost answer
-    """
 
     if not error_info["has_error"]:
-        return "No issues found — try running your code!"
+        return "No issues detected. Your code looks good!"
+
+    hint_level = max(1, min(hint_level, 3))
 
     error_type = error_info["error_type"]
     message = error_info["message"]
 
-    # Clamp hint level
-    hint_level = max(1, min(hint_level, 3))
-
-    if error_type == "SyntaxError":
+    # SYNTAX ERRORS
+    if error_type in ["SyntaxError", "InvalidSyntax", "IncompleteCode"]:
 
         if hint_level == 1:
-            return "There is a syntax issue in your code. Check your brackets and punctuation."
+            return "There is a syntax issue. Python cannot understand the structure."
 
         if hint_level == 2:
-            return "Python cannot parse your code. Look carefully around missing or incorrect symbols."
+            return "Check for missing brackets, colons, or incomplete statements."
 
         if hint_level == 3:
-            return f"SyntaxError detected: {message}"
+            return f"Exact issue: {message}"
 
-    # fallback
-    return "Try reviewing your code step by step."
+    # RUNTIME ERRORS
+    if error_type == "RuntimeError":
+
+        if hint_level == 1:
+            return "Your code ran but crashed during execution."
+
+        if hint_level == 2:
+            return "Check operations like division, variable names, or loops."
+
+        if hint_level == 3:
+            return f"Runtime error details: {message}"
+
+    return "Try reviewing your code carefully."
