@@ -9,34 +9,40 @@ chat_bp = Blueprint("chat", __name__)
 def chat():
     data = request.get_json()
 
-    code = data.get("code", "")
+    code = data.get("code")
     hint_level = data.get("hint_level", 1)
 
     if not code:
-        return jsonify({"error": "No code provided"}), 400
+        return jsonify({
+            "success": False,
+            "error": "No code provided"
+        }), 400
 
-    # 1. Syntax check
-    error_info = analyse_code(code)
+    # 1. Syntax analysis
+    syntax_result = analyse_code(code)
 
-    # 2. Runtime check (only if syntax is ok)
-    runtime_info = None
-    if not error_info["has_error"]:
-        runtime_info = run_code_safely(code)
+    # 2. Runtime analysis (only if syntax OK)
+    runtime_result = None
+    if not syntax_result["has_error"]:
+        runtime_result = run_code_safely(code)
 
-    # 3. Decide final error state
-    final_error = error_info
+    # 3. Determine final error state
+    final_error = syntax_result
 
-    if runtime_info and runtime_info.get("runtime_error"):
+    if runtime_result and runtime_result.get("runtime_error"):
         final_error = {
             "has_error": True,
             "error_type": "RuntimeError",
-            "message": runtime_info["message"]
+            "message": runtime_result["message"]
         }
 
     # 4. Generate hint
     hint = generate_hint(final_error, hint_level)
 
     return jsonify({
+        "success": True,
+        "code_received": code,
         "error": final_error,
-        "hint": hint
+        "hint": hint,
+        "hint_level_used": max(1, min(hint_level, 3))
     })
