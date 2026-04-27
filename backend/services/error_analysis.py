@@ -1,30 +1,31 @@
 import ast
 
 def analyse_code(code: str):
-    """
-    Very simple Python error detection using AST parsing.
-    Later we can upgrade to deeper static analysis.
-    """
-
     try:
         ast.parse(code)
+
         return {
             "has_error": False,
             "error_type": None,
-            "message": "No syntax errors detected"
+            "message": "No syntax errors"
         }
 
     except SyntaxError as e:
-        return {
-            "has_error": True,
-            "error_type": "SyntaxError",
-            "message": str(e),
-            "line": e.lineno
-        }
 
-    except Exception as e:
+        error_type = "SyntaxError"
+
+        # better classification
+        msg = str(e)
+
+        if "unexpected EOF" in msg:
+            error_type = "IncompleteCode"
+
+        elif "invalid syntax" in msg:
+            error_type = "InvalidSyntax"
+
         return {
             "has_error": True,
-            "error_type": "Error",
-            "message": str(e)
+            "error_type": error_type,
+            "message": msg,
+            "line": e.lineno
         }
