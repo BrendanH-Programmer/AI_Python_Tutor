@@ -1,19 +1,27 @@
 async function sendCode() {
     const code = document.getElementById("codeInput").value;
+    const responseBox = document.getElementById("responseBox");
 
-    const response = await fetch("http://127.0.0.1:5000/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            code: code,
-            hint_level: 1
-        })
-    });
+    responseBox.innerText = "Loading...";
 
-    const data = await response.json();
+    try {
+        const response = await fetch("http://127.0.0.1:5000/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code: code,
+                hint_level: 1
+            })
+        });
 
-    document.getElementById("responseBox").innerText =
-        JSON.stringify(data, null, 2);
+        const data = await response.json();
+
+        responseBox.innerText = JSON.stringify(data, null, 2);
+
+    } catch (error) {
+        responseBox.innerText = "Error connecting to backend.";
+        console.error(error);
+    }
 }
