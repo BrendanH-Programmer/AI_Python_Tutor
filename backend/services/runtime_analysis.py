@@ -2,19 +2,26 @@ import traceback
 
 def run_code_safely(code: str):
     """
-    Executes code safely and captures runtime errors.
-    WARNING: This is still basic (we improve later with sandboxing).
+    Executes code and captures runtime errors.
+    Limited builtins for safety.
     """
 
     try:
-        # Safe execution environment
+        safe_globals = {
+            "__builtins__": {
+                "print": print,
+                "range": range,
+                "len": len
+            }
+        }
+
         local_vars = {}
 
-        exec(code, {"__builtins__": {}}, local_vars)
+        exec(code, safe_globals, local_vars)
 
         return {
             "runtime_error": False,
-            "output": local_vars
+            "output": "Code executed successfully"
         }
 
     except Exception:
