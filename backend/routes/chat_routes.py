@@ -32,8 +32,8 @@ def chat():
     if runtime_result and runtime_result.get("runtime_error"):
         final_error = {
             "has_error": True,
-            "error_type": "RuntimeError",
-            "message": runtime_result["message"]
+            "error_type": runtime_result.get("error_type", "RuntimeError"),
+            "message": runtime_result.get("message", "Unknown runtime error")
         }
 
     # 4. Generate hint
