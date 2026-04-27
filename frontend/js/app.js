@@ -1,6 +1,10 @@
-async function sendCode() {
+let hintLevel = 1;
+
+async function sendCode(reset = true) {
     const code = document.getElementById("codeInput").value;
     const responseBox = document.getElementById("responseBox");
+
+    if (reset) hintLevel = 1;
 
     responseBox.innerText = "Loading...";
 
@@ -12,16 +16,22 @@ async function sendCode() {
             },
             body: JSON.stringify({
                 code: code,
-                hint_level: 1
+                hint_level: hintLevel
             })
         });
 
         const data = await response.json();
 
-        responseBox.innerText = JSON.stringify(data, null, 2);
+        responseBox.innerText =
+            "Hint Level " + hintLevel + ":\n\n" +
+            data.hint;
 
     } catch (error) {
         responseBox.innerText = "Error connecting to backend.";
-        console.error(error);
     }
+}
+
+function nextHint() {
+    hintLevel++;
+    sendCode(false);
 }
