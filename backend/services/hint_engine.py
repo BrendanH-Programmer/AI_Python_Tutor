@@ -1,57 +1,30 @@
-def generate_hint(error_info, hint_level):
-    error_type = error_info.get("type")
-    message = error_info.get("message", "")
+def generate_hint(error_info, hint_level: int):
+    """
+    Tiered hint system:
+    Level 1 = general hint
+    Level 2 = more specific
+    Level 3 = almost answer
+    """
 
-    # NO ERROR
-    if error_type == "none":
-        return "Your code ran successfully. Try adding more complexity or testing edge cases."
+    if not error_info["has_error"]:
+        return "No issues found — try running your code!"
 
-    # SYNTAX ERRORS
+    error_type = error_info["error_type"]
+    message = error_info["message"]
+
+    # Clamp hint level
+    hint_level = max(1, min(hint_level, 3))
+
     if error_type == "SyntaxError":
 
-        if ":" in message:
-            return [
-                "Check if you are missing a colon ':' in statements like if, for, or def.",
-                "Python requires a colon at the end of control statements.",
-                "Add ':' at the end of your statement (e.g. if x == 5:)"
-            ][min(hint_level-1, 2)]
+        if hint_level == 1:
+            return "There is a syntax issue in your code. Check your brackets and punctuation."
 
-        if "unexpected EOF" in message:
-            return [
-                "It looks like something is incomplete.",
-                "Check if all brackets or quotes are properly closed.",
-                "You are likely missing a closing bracket or quotation mark."
-            ][min(hint_level-1, 2)]
+        if hint_level == 2:
+            return "Python cannot parse your code. Look carefully around missing or incorrect symbols."
 
-        return [
-            "Check your syntax carefully.",
-            "Focus on the line mentioned in the error.",
-            f"Review line {error_info.get('line')} for syntax issues."
-        ][min(hint_level-1, 2)]
+        if hint_level == 3:
+            return f"SyntaxError detected: {message}"
 
-    # ZERO DIVISION
-    if error_type == "ZeroDivisionError":
-        return [
-            "Check your division operations.",
-            "You might be dividing a number by zero.",
-            "Division by zero is not allowed — ensure denominator is not 0."
-        ][min(hint_level-1, 2)]
-
-    # NAME ERROR
-    if error_type == "NameError":
-        return [
-            "Check variable names.",
-            "A variable might not be defined.",
-            "Define the variable before using it."
-        ][min(hint_level-1, 2)]
-
-    # TYPE ERROR
-    if error_type == "TypeError":
-        return [
-            "Check the types of your variables.",
-            "You may be mixing incompatible types.",
-            "Ensure operations are between compatible data types."
-        ][min(hint_level-1, 2)]
-
-    # FALLBACK
-    return f"Error detected: {message}"
+    # fallback
+    return "Try reviewing your code step by step."

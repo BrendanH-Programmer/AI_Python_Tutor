@@ -1,26 +1,30 @@
-def analyse_code(code):
+import ast
+
+def analyse_code(code: str):
+    """
+    Very simple Python error detection using AST parsing.
+    Later we can upgrade to deeper static analysis.
+    """
+
     try:
-        # Try to compile the code (detect syntax errors)
-        compiled_code = compile(code, "<string>", "exec")
-
-        # Try to execute safely (detect runtime errors)
-        exec_globals = {}
-        exec(compiled_code, exec_globals)
-
+        ast.parse(code)
         return {
-            "type": "none",
-            "message": "No errors detected"
+            "has_error": False,
+            "error_type": None,
+            "message": "No syntax errors detected"
         }
 
     except SyntaxError as e:
         return {
-            "type": "SyntaxError",
+            "has_error": True,
+            "error_type": "SyntaxError",
             "message": str(e),
             "line": e.lineno
         }
 
     except Exception as e:
         return {
-            "type": type(e).__name__,
+            "has_error": True,
+            "error_type": "Error",
             "message": str(e)
         }

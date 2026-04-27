@@ -19,5 +19,6 @@ def chat():
 
     return jsonify({
         "error": error_info,
-        "hint": hint
+        "hint": hint,
+        "hint_level_used": min(max(hint_level, 1), 3)
     })
