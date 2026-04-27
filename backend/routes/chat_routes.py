@@ -12,7 +12,7 @@ def chat():
     if not code:
         return jsonify({"error": "No code provided"}), 400
 
-    # Temporary safe response (NO imports)
+    # Temporary safe response
     return jsonify({
         "error": "none",
         "hint": f"Received code with hint level {hint_level}"
