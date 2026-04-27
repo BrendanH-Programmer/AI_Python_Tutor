@@ -1,11 +1,6 @@
 import traceback
 
 def run_code_safely(code: str):
-    """
-    Executes code and captures runtime errors.
-    Limited builtins for safety.
-    """
-
     try:
         safe_globals = {
             "__builtins__": {
@@ -24,8 +19,9 @@ def run_code_safely(code: str):
             "output": "Code executed successfully"
         }
 
-    except Exception:
+    except Exception as e:
         return {
             "runtime_error": True,
-            "message": traceback.format_exc()
+            "error_type": type(e).__name__,
+            "message": str(e)
         }
