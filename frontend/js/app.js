@@ -35,9 +35,11 @@ async function sendCode(reset = true) {
         // -------------------------
         tableBody.innerHTML = "";
 
-        if (data.errors && data.errors.length > 0) {
+        const issues = data.issues || [];
 
-            data.errors.forEach(err => {
+        if (issues.length > 0) {
+
+            issues.forEach(err => {
                 const row = document.createElement("tr");
 
                 row.innerHTML = `
@@ -51,8 +53,20 @@ async function sendCode(reset = true) {
 
         } else {
             const row = document.createElement("tr");
-            row.innerHTML = `<td colspan="3">No errors detected</td>`;
+            row.innerHTML = `<td colspan="3">No issues detected</td>`;
             tableBody.appendChild(row);
+        }
+
+        // -------------------------
+        // AI EXPLANATION (optional)
+        // -------------------------
+        if (data.ai_explanation) {
+            const aiBox = document.createElement("div");
+            aiBox.className = "ai-box";
+            aiBox.innerText = data.ai_explanation;
+
+            responseBox.innerText += "\n\n--- AI EXPLANATION ---\n\n";
+            responseBox.innerText += data.ai_explanation;
         }
 
     } catch (error) {
@@ -64,7 +78,6 @@ async function sendCode(reset = true) {
 function nextHint() {
     hintLevel++;
 
-    // cap at level 3 (important for your design)
     if (hintLevel > 3) hintLevel = 3;
 
     sendCode(false);

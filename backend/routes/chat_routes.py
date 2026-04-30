@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
 from services.error_analysis import analyse_code
-from services.runtime_analysis import run_code_safely
+from services.code_analysis import run_code_safely
+from services.error_ranker import rank_errors
 from services.hint_engine import generate_hint
 from services.ai_service import get_ai_explanation
-from services.error_ranker import rank_errors
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -22,55 +22,56 @@ def chat():
         }), 400
 
     # -------------------------
-    # 1. Syntax analysis
+    # 1. Syntax Analysis
     # -------------------------
     syntax_result = analyse_code(code)
 
     # -------------------------
-    # 2. Runtime analysis
+    # 2. Static Analysis (NOT runtime execution)
     # -------------------------
-    runtime_result = None
-    if not syntax_result["has_error"]:
-        runtime_result = run_code_safely(code)
+    runtime_result = run_code_safely(code)
 
     # -------------------------
-    # 3. Collect errors
+    # 3. Collect ALL issues
     # -------------------------
-    errors = []
+    issues = []
 
-    if syntax_result["has_error"]:
-        errors.append(syntax_result)
+    if syntax_result.get("has_error"):
+        issues.append({
+            "error_type": syntax_result.get("error_type"),
+            "message": syntax_result.get("message"),
+            "category": "error"
+        })
 
-    if runtime_result and runtime_result.get("runtime_error"):
-        errors.append({
-            "has_error": True,
-            "error_type": runtime_result.get("error_type", "RuntimeError"),
-            "message": runtime_result.get("message", "Unknown runtime error")
+    for issue in runtime_result.get("issues", []):
+        issues.append({
+            "error_type": issue.get("error_type"),
+            "message": issue.get("message"),
+            "category": "warning"
         })
 
     # -------------------------
-    # 4. Rank errors
+    # 4. Rank issues
     # -------------------------
-    ranked_errors = rank_errors(errors, code) if errors else []
+    ranked_issues = rank_errors(issues, code) if issues else []
 
     # -------------------------
-    # 5. Select TOP error (by rank)
+    # 5. Top issue for hints
     # -------------------------
-    top_error = ranked_errors[0] if ranked_errors else {
-        "has_error": False,
+    top_issue = ranked_issues[0] if ranked_issues else {
         "error_type": None,
-        "message": "No errors"
+        "message": "No issues",
+        "has_error": False
     }
 
-    # Convert ranked format → hint format
     hint_input = {
-        "has_error": len(errors) > 0,
-        "error_type": top_error.get("error_type"),
-        "message": top_error.get("message")
+        "has_error": len(issues) > 0,
+        "error_type": top_issue.get("error_type"),
+        "message": top_issue.get("message")
     }
 
     # -------------------------
-    # 6. Generate hint
+    # 6. Hint system
     # -------------------------
     hint = generate_hint(hint_input, hint_level)
 
@@ -79,21 +80,8 @@ def chat():
     # -------------------------
     ai_explanation = None
 
-    if hint_level >= 3 and ranked_errors:
-
-        # Build explanation-friendly structure
-        structured_errors = []
-
-        for err in ranked_errors:
-            structured_errors.append({
-                "type": err.get("error_type"),
-                "message": err.get("message"),
-                "priority": err.get("priority"),
-                "score": err.get("score"),
-                "reason": err.get("reason", [])
-            })
-
-        ai_explanation = get_ai_explanation(code, structured_errors)
+    if hint_level >= 3 and ranked_issues:
+        ai_explanation = get_ai_explanation(code, ranked_issues)
 
     # -------------------------
     # 8. Response
@@ -101,7 +89,7 @@ def chat():
     return jsonify({
         "success": True,
         "code_received": code,
-        "errors": ranked_errors,
+        "issues": ranked_issues,
         "hint": hint,
         "ai_explanation": ai_explanation,
         "hint_level_used": max(1, min(hint_level, 3))
