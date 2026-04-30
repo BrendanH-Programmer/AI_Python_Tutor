@@ -1,44 +1,34 @@
-import traceback
-import io
-import sys
-
+import ast
 
 def run_code_safely(code: str):
+    """
+    NOTE: This is no longer execution.
+    This is static analysis only (like ChatGPT / VS Code warnings).
+    """
+
     try:
-        # Capture print output
-        output_buffer = io.StringIO()
-        sys.stdout = output_buffer
+        tree = ast.parse(code)
 
-        safe_globals = {
-            "__builtins__": {
-                "print": print,
-                "range": range,
-                "len": len,
-                "int": int,
-                "str": str,
-                "float": float
-            }
-        }
+        issues = []
 
-        local_vars = {}
+        for node in ast.walk(tree):
 
-        exec(code, safe_globals, local_vars)
-
-        output = output_buffer.getvalue()
-
-        sys.stdout = sys.__stdout__
+            # Detect imports (SAFE - NOT execution)
+            if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+                issues.append({
+                    "error_type": "ImportStatement",
+                    "message": "This code imports external modules",
+                    "note": "No execution performed"
+                })
 
         return {
-            "runtime_error": False,
-            "output": output.strip() if output else "Code executed successfully"
+            "runtime_error": len(issues) > 0,
+            "issues": issues
         }
 
-    except Exception as e:
-        sys.stdout = sys.__stdout__
-
+    except SyntaxError as e:
         return {
             "runtime_error": True,
-            "error_type": type(e).__name__,
-            "message": str(e),
-            "traceback": traceback.format_exc()
+            "error_type": "SyntaxError",
+            "message": str(e)
         }
