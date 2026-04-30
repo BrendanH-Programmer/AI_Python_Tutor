@@ -1,34 +1,51 @@
 def generate_hint(error_info, hint_level: int):
 
-    if not error_info.get("has_error"):
+    # Allow both single error OR list of errors
+    if isinstance(error_info, list):
+        errors = error_info
+    else:
+        errors = [error_info]
+
+    # No errors case
+    if not errors or not errors[0].get("has_error"):
         return "No issues detected. Your code looks good!"
 
-    # Clamp hint level (1–3)
+    # Clamp hint level
     hint_level = max(1, min(hint_level, 3))
 
-    error_type = error_info.get("error_type", "UnknownError")
-    message = error_info.get("message", "")
+    # Use first (most important) error for hint system
+    primary_error = errors[0]
+
+    error_type = primary_error.get("error_type", "UnknownError")
+    message = primary_error.get("message", "")
 
     # ------------------------
-    # HINT LEVEL 1 (very vague)
+    # LEVEL 1 (very vague)
     # ------------------------
     if hint_level == 1:
+        if len(errors) > 1:
+            return f"There are {len(errors)} issues in your code. Try to find the first problem."
         return "There is an issue in your code. Try reviewing it carefully."
 
     # ------------------------
-    # HINT LEVEL 2 (guided)
+    # LEVEL 2 (guided)
     # ------------------------
-    elif hint_level == 2:
-
-        # Convert error type into readable words
+    if hint_level == 2:
         readable_error = error_type.replace("Error", "").replace("_", " ").strip().lower()
 
-        return f"This looks like a {readable_error.lower()} issue. Think about what might cause it."
+        if len(errors) > 1:
+            return f"There are multiple issues. The first one looks like a {readable_error} problem."
+
+        return f"This looks like a {readable_error} issue. Think about what might cause it."
 
     # ------------------------
-    # HINT LEVEL 3 (explicit)
+    # LEVEL 3 (explicit)
     # ------------------------
-    elif hint_level == 3:
+    if hint_level == 3:
+
+        if len(errors) > 1:
+            extra = f"\nAlso: {len(errors) - 1} more issue(s) detected."
+            return f"{error_type}: {message}{extra}"
 
         return f"{error_type}: {message}"
 

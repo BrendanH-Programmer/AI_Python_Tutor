@@ -22,34 +22,47 @@ def chat():
     # 1. Syntax analysis
     syntax_result = analyse_code(code)
 
-    # 2. Runtime analysis (only if syntax OK)
+    # 2. Runtime analysis (only if no syntax error)
     runtime_result = None
     if not syntax_result["has_error"]:
         runtime_result = run_code_safely(code)
 
-    # 3. Determine final error state
-    final_error = syntax_result
+    # 3. Collect ALL errors
+    errors = []
 
+    # Add syntax error
+    if syntax_result["has_error"]:
+        errors.append(syntax_result)
+
+    # Add runtime error
     if runtime_result and runtime_result.get("runtime_error"):
-        final_error = {
+        errors.append({
             "has_error": True,
             "error_type": runtime_result.get("error_type", "RuntimeError"),
             "message": runtime_result.get("message", "Unknown runtime error")
-        }
+        })
 
-    # 4. Generate hint
-    hint = generate_hint(final_error, hint_level)
+    # If no errors
+    final_error_state = {
+        "has_error": len(errors) > 0,
+        "errors": errors
+    }
 
-    # 5. AI explanation (only at level 3)
+    # 4. Generate hint (still works with your system)
+    hint = generate_hint(
+        errors[0] if errors else {"has_error": False},
+        hint_level
+    )
+
+    # 5. AI explanation (only level 3)
     ai_explanation = None
-
-    if hint_level >= 3 and final_error.get("has_error"):
-        ai_explanation = get_ai_explanation(code, final_error)
+    if hint_level >= 3 and errors:
+        ai_explanation = get_ai_explanation(code, errors)
 
     return jsonify({
         "success": True,
         "code_received": code,
-        "error": final_error,
+        "error": final_error_state,
         "hint": hint,
         "ai_explanation": ai_explanation,
         "hint_level_used": max(1, min(hint_level, 3))
