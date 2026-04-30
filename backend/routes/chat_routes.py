@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from services.error_analysis import analyse_code
 from services.runtime_analysis import run_code_safely
 from services.hint_engine import generate_hint
+from services.ai_service import get_ai_explanation
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -39,10 +40,17 @@ def chat():
     # 4. Generate hint
     hint = generate_hint(final_error, hint_level)
 
+    # 5. AI explanation (only at level 3)
+    ai_explanation = None
+
+    if hint_level >= 3 and final_error.get("has_error"):
+        ai_explanation = get_ai_explanation(code, final_error)
+
     return jsonify({
         "success": True,
         "code_received": code,
         "error": final_error,
         "hint": hint,
+        "ai_explanation": ai_explanation,
         "hint_level_used": max(1, min(hint_level, 3))
     })
