@@ -3,8 +3,10 @@ from services.error_analysis import analyse_code
 from services.runtime_analysis import run_code_safely
 from services.hint_engine import generate_hint
 from services.ai_service import get_ai_explanation
+from services.error_ranker import rank_errors
 
 chat_bp = Blueprint("chat", __name__)
+
 
 @chat_bp.route("/chat", methods=["POST"])
 def chat():
@@ -19,22 +21,26 @@ def chat():
             "error": "No code provided"
         }), 400
 
+    # -------------------------
     # 1. Syntax analysis
+    # -------------------------
     syntax_result = analyse_code(code)
 
-    # 2. Runtime analysis (only if no syntax error)
+    # -------------------------
+    # 2. Runtime analysis
+    # -------------------------
     runtime_result = None
     if not syntax_result["has_error"]:
         runtime_result = run_code_safely(code)
 
-    # 3. Collect ALL errors
+    # -------------------------
+    # 3. Collect errors
+    # -------------------------
     errors = []
 
-    # Add syntax error
     if syntax_result["has_error"]:
         errors.append(syntax_result)
 
-    # Add runtime error
     if runtime_result and runtime_result.get("runtime_error"):
         errors.append({
             "has_error": True,
@@ -42,27 +48,46 @@ def chat():
             "message": runtime_result.get("message", "Unknown runtime error")
         })
 
-    # If no errors
-    final_error_state = {
-        "has_error": len(errors) > 0,
-        "errors": errors
+    # -------------------------
+    # 4. Rank errors
+    # -------------------------
+    ranked_errors = rank_errors(errors, code) if errors else []
+
+    # -------------------------
+    # 5. Select TOP error (by rank)
+    # -------------------------
+    top_error = ranked_errors[0] if ranked_errors else {
+        "has_error": False,
+        "error_type": None,
+        "message": "No errors"
     }
 
-    # 4. Generate hint (still works with your system)
-    hint = generate_hint(
-        errors[0] if errors else {"has_error": False},
-        hint_level
-    )
+    # Convert ranked format → hint format
+    hint_input = {
+        "has_error": len(errors) > 0,
+        "error_type": top_error.get("error_type"),
+        "message": top_error.get("message")
+    }
 
-    # 5. AI explanation (only level 3)
+    # -------------------------
+    # 6. Generate hint
+    # -------------------------
+    hint = generate_hint(hint_input, hint_level)
+
+    # -------------------------
+    # 7. AI explanation (level 3 only)
+    # -------------------------
     ai_explanation = None
-    if hint_level >= 3 and errors:
-        ai_explanation = get_ai_explanation(code, errors)
+    if hint_level >= 3 and ranked_errors:
+        ai_explanation = get_ai_explanation(code, ranked_errors)
 
+    # -------------------------
+    # 8. Response
+    # -------------------------
     return jsonify({
         "success": True,
         "code_received": code,
-        "error": final_error_state,
+        "errors": ranked_errors,
         "hint": hint,
         "ai_explanation": ai_explanation,
         "hint_level_used": max(1, min(hint_level, 3))
