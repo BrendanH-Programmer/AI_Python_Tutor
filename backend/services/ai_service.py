@@ -27,24 +27,40 @@ def get_ai_explanation(code, errors):
                 error_text += f"\n{i}. {error_type}: {message}"
 
         prompt = f"""
-You are an AI Python tutor helping a beginner student.
+You are an expert AI Python tutor.
 
-Student's code:
+Your job is to:
+1. Explain ALL errors clearly
+2. Explain WHY they are ranked in this order
+3. Teach the student how to think about debugging order
+
+Student code:
 {code}
 
-The following errors were detected:
+Ranked errors (highest priority first):
 
-{error_text}
+{errors}
 
-Respond in this structure:
+---
 
-1. Simple Explanation (overall issue summary)
-2. Why It Happened
-3. Step-by-step Fix (in correct order)
-4. Final corrected code
+IMPORTANT TEACHING RULE:
 
-Keep explanations beginner-friendly and clear.
-Focus on fixing errors in order of importance.
+You MUST explain:
+
+A) What each error means
+B) Why it has its priority level
+C) Why higher priority errors must be fixed first
+
+Use this structure:
+
+1. Overall Problem Summary
+2. Error Breakdown Table (IMPORTANT)
+   - Error Type
+   - Meaning
+   - Why it has this priority
+3. Why This Order Matters (VERY IMPORTANT SECTION)
+4. Step-by-step Fix Plan
+5. Final Corrected Code
 """
 
         response = client.chat.completions.create(

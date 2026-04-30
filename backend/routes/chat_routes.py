@@ -78,8 +78,22 @@ def chat():
     # 7. AI explanation (level 3 only)
     # -------------------------
     ai_explanation = None
+
     if hint_level >= 3 and ranked_errors:
-        ai_explanation = get_ai_explanation(code, ranked_errors)
+
+        # Build explanation-friendly structure
+        structured_errors = []
+
+        for err in ranked_errors:
+            structured_errors.append({
+                "type": err.get("error_type"),
+                "message": err.get("message"),
+                "priority": err.get("priority"),
+                "score": err.get("score"),
+                "reason": err.get("reason", [])
+            })
+
+        ai_explanation = get_ai_explanation(code, structured_errors)
 
     # -------------------------
     # 8. Response
