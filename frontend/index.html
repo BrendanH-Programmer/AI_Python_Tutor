@@ -15,11 +15,29 @@
 
     <button onclick="sendCode()">Analyse Code</button>
     <button onclick="nextHint()">Next Hint</button>
-    
+
     <div class="output">
         <h3>Response</h3>
         <pre id="responseBox"></pre>
     </div>
+
+    <!-- 🔥 ERROR RANKING TABLE (NEW) -->
+    <div class="output">
+        <h3>Error Ranking</h3>
+
+        <table id="errorTable">
+            <thead>
+                <tr>
+                    <th>Error Type</th>
+                    <th>Priority</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+
+            <tbody></tbody>
+        </table>
+    </div>
+
 </div>
 
 <script src="js/app.js"></script>
